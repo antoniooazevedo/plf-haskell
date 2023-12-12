@@ -9,20 +9,36 @@ data Inst =
   deriving Show
 type Code = [Inst]
 
--- createEmptyStack :: Stack
-createEmptyStack = undefined -- TODO, Uncomment the function signature after defining Stack
+data Values = IntVal Integer | BoolVal Bool deriving Show
+type Stack = [Values]
+ 
+type State = [(String, Values)]
 
--- stack2Str :: Stack -> String
-stack2Str = undefined -- TODO, Uncomment all the other function type declarations as you implement them
+-- Stack and State functions
+createEmptyStack :: Stack
+createEmptyStack = []
 
--- createEmptyState :: State
-createEmptyState = undefined -- TODO, Uncomment the function signature after defining State
+stack2Str :: Stack -> String
+stack2Str (x:[]) = (showVal x)
+stack2Str (x:xs) = (showVal x) ++ "," ++ stack2Str xs
 
--- state2Str :: State -> String
-state2Str = undefined -- TODO
+showVal :: Values -> String
+showVal (IntVal a) = show a
+showVal (BoolVal b) = show b
 
--- run :: (Code, Stack, State) -> (Code, Stack, State)
-run = undefined -- TODO
+createEmptyState :: State
+createEmptyState = [] 
+
+state2Str :: State -> String
+state2Str ((a,b):[]) = a ++ "=" ++ (showVal b)
+state2Str ((a,b):xs) = a ++ "=" ++ (showVal b) ++ "," ++ state2Str xs 
+
+run :: (Code, Stack, State) -> (Code, Stack, State)
+run ([],a,b) = ([],a,b)
+
+-- Add
+run ((Add: xs), (IntVal s1: IntVal s2:sR), state) = (xs, ((IntVal (s1+s2)):sR), state)
+run ((Add: xs), _, _) = error "Add Error: Wrong types"
 
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)

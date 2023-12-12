@@ -37,8 +37,16 @@ run :: (Code, Stack, State) -> (Code, Stack, State)
 run ([],a,b) = ([],a,b)
 
 -- Add
-run ((Add: xs), (IntVal s1: IntVal s2:sR), state) = (xs, ((IntVal (s1+s2)):sR), state)
+run ((Add: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1+s2)):sR), state)
 run ((Add: xs), _, _) = error "Add Error: Wrong types"
+
+-- Mult
+run ((Mult: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1*s2)):sR), state)
+run ((Mult: xs), _, _) = error "Mult Error: Wrong types"
+
+-- Sub
+run ((Sub: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1-s2)):sR), state)
+run ((Sub: xs), _, _) = error "Sub Error: Wrong types"
 
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)

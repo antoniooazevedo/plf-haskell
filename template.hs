@@ -30,6 +30,7 @@ createEmptyState :: State
 createEmptyState = [] 
 
 state2Str :: State -> String
+state2Str [] = ""
 state2Str ((a,b):[]) = a ++ "=" ++ (showVal b)
 state2Str ((a,b):xs) = a ++ "=" ++ (showVal b) ++ "," ++ state2Str xs 
 
@@ -48,19 +49,50 @@ run ((Mult: xs), _, _) = error "Mult Error: Wrong types"
 run ((Sub: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1-s2)):sR), state)
 run ((Sub: xs), _, _) = error "Sub Error: Wrong types"
 
+-- Eq
+run ((Equ: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((BoolVal (s1==s2)):sR), state)
+run ((Equ: xs), (BoolVal s1: BoolVal s2:sR), state) = run(xs, ((BoolVal (s1==s2)):sR), state)
+run ((Equ: xs), _, _) = error "Equ Error: Wrong types"
+
+-- Le
+run ((Le: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((BoolVal (s1<=s2)):sR), state)
+run ((Le: xs), _, _) = error "Le Error: Wrong types"
+
+-- Push
+run ((Push a: xs), s, state) = run(xs, ((IntVal a):s), state)
+
+-- Tru
+run ((Tru: xs), s, state) = run(xs, ((BoolVal True):s), state)
+
+-- Fals
+run ((Fals: xs), s, state) = run(xs, ((BoolVal False):s), state)
+
+-- Neg
+run ((Neg: xs), (BoolVal s1:sR), state) = run(xs, ((BoolVal (not s1)):sR), state)
+run ((Neg: xs), _, _) = error "Neg Error: Wrong types"
+
+-- And
+run ((And: xs), (BoolVal s1: BoolVal s2:sR), state) = run(xs, ((BoolVal (s1 && s2)):sR), state)
+run ((And: xs), _, _) = error "And Error: Wrong types"
+
+-- Noop
+run ((Noop: xs), s, state) = run(xs, s, state)
+
+
+
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)
 testAssembler code = (stack2Str stack, state2Str state)
   where (_,stack,state) = run(code, createEmptyStack, createEmptyState)
 
 -- Examples:
--- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
+--PASSES-- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
 -- testAssembler [Fals,Push 3,Tru,Store "var",Store "a", Store "someVar"] == ("","a=3,someVar=False,var=True")
 -- testAssembler [Fals,Store "var",Fetch "var"] == ("False","var=False")
--- testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
--- testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
--- testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
--- testAssembler [Push (-20),Push (-21), Le] == ("True","")
+--PASSES-- testAssembler [Push (-20),Tru,Fals] == ("False,True,-20","")
+--PASSES-- testAssembler [Push (-20),Tru,Tru,Neg] == ("False,True,-20","")
+--PASSES-- testAssembler [Push (-20),Tru,Tru,Neg,Equ] == ("False,-20","")
+--PASSES-- testAssembler [Push (-20),Push (-21), Le] == ("True","")
 -- testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
 -- testAssembler [Push 10,Store "i",Push 1,Store "fact",Loop [Push 1,Fetch "i",Equ,Neg] [Fetch "i",Fetch "fact",Mult,Store "fact",Push 1,Fetch "i",Sub,Store "i"]] == ("","fact=3628800,i=1")
 

@@ -1,5 +1,7 @@
 -- PFL 2023/24 - Haskell practical assignment quickstart
 
+import Data.List
+
 -- Part 1
 
 -- Do not modify our definition of Inst and Code
@@ -78,6 +80,15 @@ run ((And: xs), _, _) = error "And Error: Wrong types"
 -- Noop
 run ((Noop: xs), s, state) = run(xs, s, state)
 
+-- Fetch
+run ((Fetch a:xs), stack, state) = run (xs, ((case (find (\(x,_) -> x == a) state) of 
+                                                Just val -> snd val
+                                                Nothing -> error ("Can't fetch variable: " ++ a)
+                                              ):stack), state)
+
+-- Store
+run ((Store a: xs), (IntVal s:sR), state) = run (xs, sR, ((a, IntVal s):[(x,y) | (x,y) <- state, x /= a]))
+run ((Store a: xs), (BoolVal s:sR), state) = run (xs, sR, ((a, BoolVal s):[(x,y) | (x,y) <- state, x /= a]))
 
 
 -- To help you test your assembler

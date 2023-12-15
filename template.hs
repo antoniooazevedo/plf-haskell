@@ -90,6 +90,13 @@ run ((Fetch a:xs), stack, state) = run (xs, ((case (find (\(x,_) -> x == a) stat
 run ((Store a: xs), (IntVal s:sR), state) = run (xs, sR, ((a, IntVal s):[(x,y) | (x,y) <- state, x /= a]))
 run ((Store a: xs), (BoolVal s:sR), state) = run (xs, sR, ((a, BoolVal s):[(x,y) | (x,y) <- state, x /= a]))
 
+-- Branch
+run ((Branch c1 c2:xs), (BoolVal s:sR), state) | s == True = run ((c1 ++ xs), sR, state)
+                                               | s == False = run ((c2 ++ xs), sR, state)
+run ((Branch c1 c2:xs), (IntVal s:sR), state) = error "Can't branch on non-bool"
+
+-- Loop
+run ((Loop c1 c2:xs), stack, state) = run (((c1 ++ [Branch (c2 ++ [Loop c1 c2]) [Noop]]) ++ xs), stack, state)
 
 -- To help you test your assembler
 testAssembler :: Code -> (String, String)

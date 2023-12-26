@@ -6,15 +6,12 @@ data Token
     = PlusTok
     | MinusTok
     | TimesTok
-    | DivTok
     | OpenTok
     | CloseTok
     | EndTok
-    | EqTok
+    | IntEqTok
     | LeTok
-    | GeTok
-    | GtTok
-    | LtTok
+    | BoolEqTok
     | IfTok
     | ThenTok
     | ElseTok
@@ -23,7 +20,7 @@ data Token
     | AttrTok
     | AndTok
     | NotTok
-    | IntTok Int
+    | IntTok Integer
     | BoolTok Bool
     | VarTok String
     deriving (Show)
@@ -33,15 +30,12 @@ lexer [] = []
 lexer ('+' : restStr) = PlusTok : lexer restStr
 lexer ('-' : restStr) = MinusTok : lexer restStr
 lexer ('*' : restStr) = TimesTok : lexer restStr
-lexer ('/' : restStr) = DivTok : lexer restStr
 lexer ('(' : restStr) = OpenTok : lexer restStr
 lexer (')' : restStr) = CloseTok : lexer restStr
 lexer (';' : restStr) = EndTok : lexer restStr
-lexer ('=':'=' : restStr) = EqTok : lexer restStr
+lexer ('=':'=' : restStr) = IntEqTok : lexer restStr
 lexer ('<':'=' : restStr) = LeTok : lexer restStr
-lexer ('>':'=' : restStr) = GeTok : lexer restStr
-lexer ('>' : restStr) = GtTok : lexer restStr
-lexer ('<' : restStr) = LtTok : lexer restStr
+lexer ('=' : restStr) = BoolEqTok : lexer restStr
 lexer ('i':'f': restStr) = IfTok : lexer restStr
 lexer ('t':'h':'e':'n': restStr) = ThenTok : lexer restStr
 lexer ('e':'l':'s':'e': restStr) = ElseTok : lexer restStr

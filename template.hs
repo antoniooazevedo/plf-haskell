@@ -116,16 +116,48 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- Part 2
 
--- TODO: Define the types Aexp, Bexp, Stm and Program
+data Aexp
+  = IntLit Integer
+  | AddExp Aexp Aexp
+  | SubExp Aexp Aexp
+  | MultExp Aexp Aexp
+  deriving Show
 
--- compA :: Aexp -> Code
-compA = undefined -- TODO
+data Bexp
+  = BoolLit Bool
+  | IntEquals Aexp Aexp
+  | BoolEquals Bexp Bexp
+  | LessEquals Aexp Aexp
+  | AndExp Bexp Bexp
+  | NotExp Bexp
 
--- compB :: Bexp -> Code
-compB = undefined -- TODO
+data Stm
+  = Attribution String Aexp
+  | While Bexp Stm
+  | IfElse Bexp Stm Stm
 
--- compile :: Program -> Code
-compile = undefined -- TODO
+compA :: Aexp -> Code
+compA expr = case expr of
+  IntLit a -> [Push a]
+  AddExp a b -> (compA a) ++ (compA b) ++ [Add]
+  SubExp a b -> (compA a) ++ (compA b) ++ [Sub]
+  MultExp a b -> (compA a) ++ (compA b) ++ [Mult]
+
+compB :: Bexp -> Code
+compB expr = case expr of
+  BoolLit a -> if a == True then [Tru] else [Fals]
+  IntEquals a b -> (compA a) ++ (compA b) ++ [Equ]
+  BoolEquals a b -> (compB a) ++ (compB b) ++ [Equ]
+  LessEquals a b -> (compA a) ++ (compA b) ++ [Le]
+  AndExp a b -> (compB a) ++ (compB b) ++ [And]
+  NotExp a -> (compB a) ++ [Neg]
+
+compile :: [Stm] -> Code
+compile [] = []
+compile (x:xs) = case x of
+  Attribution a b -> (compA b) ++ [Store a] ++ (compile xs)
+  While a b -> (compB a) ++ [Loop (compile [b]) [Noop]] ++ (compile xs)
+  IfElse a b c -> (compB a) ++ [Branch (compile [b]) (compile [c])] ++ (compile xs)
 
 -- parse :: String -> Program
 parse = undefined -- TODO

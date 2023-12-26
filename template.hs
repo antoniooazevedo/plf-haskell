@@ -118,6 +118,7 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 data Aexp
   = IntLit Integer
+  | IntVar String
   | AddExp Aexp Aexp
   | SubExp Aexp Aexp
   | MultExp Aexp Aexp
@@ -139,6 +140,7 @@ data Stm
 compA :: Aexp -> Code
 compA expr = case expr of
   IntLit a -> [Push a]
+  IntVar a -> [Fetch a]
   AddExp a b -> (compA a) ++ (compA b) ++ [Add]
   SubExp a b -> (compA a) ++ (compA b) ++ [Sub]
   MultExp a b -> (compA a) ++ (compA b) ++ [Mult]

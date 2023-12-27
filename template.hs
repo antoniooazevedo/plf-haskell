@@ -2,6 +2,9 @@
 
 import Data.List
 
+import Lexer
+import Parser
+
 -- Part 1
 
 -- Do not modify our definition of Inst and Code
@@ -116,33 +119,12 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- Part 2
 
-data Aexp
-  = IntLit Integer
-  | IntVar String
-  | AddExp Aexp Aexp
-  | SubExp Aexp Aexp
-  | MultExp Aexp Aexp
-  deriving Show
-
-data Bexp
-  = BoolLit Bool
-  | IntEquals Aexp Aexp
-  | BoolEquals Bexp Bexp
-  | LessEquals Aexp Aexp
-  | AndExp Bexp Bexp
-  | NotExp Bexp
-
-data Stm
-  = Attribution String Aexp
-  | While Bexp Stm
-  | IfElse Bexp Stm Stm
-
 compA :: Aexp -> Code
 compA expr = case expr of
   IntLit a -> [Push a]
   IntVar a -> [Fetch a]
   AddExp a b -> (compA a) ++ (compA b) ++ [Add]
-  SubExp a b -> (compA a) ++ (compA b) ++ [Sub]
+  SubExp a b -> (compA b) ++ (compA a) ++ [Sub]
   MultExp a b -> (compA a) ++ (compA b) ++ [Mult]
 
 compB :: Bexp -> Code
@@ -150,7 +132,7 @@ compB expr = case expr of
   BoolLit a -> if a == True then [Tru] else [Fals]
   IntEquals a b -> (compA a) ++ (compA b) ++ [Equ]
   BoolEquals a b -> (compB a) ++ (compB b) ++ [Equ]
-  LessEquals a b -> (compA a) ++ (compA b) ++ [Le]
+  LessEquals a b -> (compA b) ++ (compA a) ++ [Le]
   AndExp a b -> (compB a) ++ (compB b) ++ [And]
   NotExp a -> (compB a) ++ [Neg]
 
@@ -158,8 +140,9 @@ compile :: [Stm] -> Code
 compile [] = []
 compile (x:xs) = case x of
   Attribution a b -> (compA b) ++ [Store a] ++ (compile xs)
-  While a b -> (compB a) ++ [Loop (compile [b]) [Noop]] ++ (compile xs)
-  IfElse a b c -> (compB a) ++ [Branch (compile [b]) (compile [c])] ++ (compile xs)
+  While a b -> [Loop (compB a) (compile [b])] ++ (compile xs)
+  IfElse a b (Just c) -> (compB a) ++ [Branch (compile [b]) (compile [c])] ++ (compile xs)
+  IfElse a b Nothing -> (compB a) ++ [Branch (compile [b]) [Noop]] ++ (compile xs)
 
 -- parse :: String -> Program
 parse = undefined -- TODO

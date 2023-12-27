@@ -23,7 +23,7 @@ data Token
     | IntTok Integer
     | BoolTok Bool
     | VarTok String
-    deriving (Show)
+    deriving (Show, Eq)
 
 lexer :: String -> [Token]
 lexer [] = []

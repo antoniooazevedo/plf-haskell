@@ -20,7 +20,8 @@ data Bexp
   deriving Show
 
 data Stm
-  = Attribution String Aexp
+  = IntAttribution String Aexp
+  | BoolAttribution String Bexp
   | While Bexp Stm
   | IfElse Bexp Stm (Maybe Stm)
   deriving Show
@@ -78,11 +79,11 @@ parseBFactor (NotTok : restTokens) = case parseBFactor restTokens of
 parseBFactor (BoolTok bool : restTokens) = Just (BoolLit bool, restTokens)
 
 parseBFactor tokens = case parseAExpr tokens of
-    Just (aexpr, LeTok : restTokens) -> case parseAFactor restTokens of
-        Just (afactor, restTokens) -> Just (LessEquals aexpr afactor, restTokens)
+    Just (aexpr1, LeTok : restTokens) -> case parseAExpr restTokens of
+        Just (aexpr2, restTokens) -> Just (LessEquals aexpr1 aexpr2, restTokens)
         _ -> Nothing
-    Just (aexpr, IntEqTok : restTokens) -> case parseAFactor restTokens of
-        Just (afactor, restTokens) -> Just (IntEquals aexpr afactor, restTokens)
+    Just (aexpr1, IntEqTok : restTokens) -> case parseAExpr restTokens of
+        Just (aexpr2, restTokens) -> Just (IntEquals aexpr1 aexpr2, restTokens)
         _ -> Nothing
     _ -> Nothing
 
@@ -110,8 +111,11 @@ parseBExpr tokens = case parseBTerm tokens of
 -- <attribution> ::= <var> ":=" <aexpr>
 parseAttribution :: [Token] -> Maybe(Stm, [Token])
 parseAttribution (VarTok var : AttrTok : restTokens) = case parseAExpr restTokens of
-    Just (aexpr, restTokens) -> Just (Attribution var aexpr, restTokens)
-    _ -> Nothing
+    Just (aexpr, restTokens) -> Just (IntAttribution var aexpr, restTokens)
+    _ -> case parseBExpr restTokens of
+        Just (bexpr, restTokens) -> Just (BoolAttribution var bexpr, restTokens)
+        _ -> Nothing
+
 parseAttribution _ = Nothing
 
 

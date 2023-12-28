@@ -78,8 +78,6 @@ parseBFactor (NotTok : restTokens) = case parseBFactor restTokens of
     Just(bfactor, restTokens) -> Just(NotExp bfactor, restTokens)
     _ -> Nothing
 
-parseBFactor (VarTok var : restTokens) = Just (BoolVar var, restTokens)
-
 parseBFactor (BoolTok bool : restTokens) = Just (BoolLit bool, restTokens)
 
 parseBFactor tokens = case parseAExpr tokens of
@@ -89,8 +87,9 @@ parseBFactor tokens = case parseAExpr tokens of
     Just (aexpr1, IntEqTok : restTokens) -> case parseAExpr restTokens of
         Just (aexpr2, restTokens) -> Just (IntEquals aexpr1 aexpr2, restTokens)
         _ -> Nothing
-    _ -> Nothing
-
+    _ -> case tokens of             -- aexpr can also contain vartokens so this must be checked at the end
+        VarTok var : restTokens -> Just (BoolVar var, restTokens)
+        _ -> Nothing
 
 -- <bterm> ::= <bfactor> { "=" <bfactor> }
 parseBTerm :: [Token] -> Maybe(Bexp, [Token])
@@ -112,7 +111,7 @@ parseBExpr tokens = case parseBTerm tokens of
     _ -> Nothing
 
 
--- <attribution> ::= <avar> ":=" (<aexpr> | <bexpr>)
+-- <attribution> ::= <var> ":=" (<aexpr> | <bexpr>)
 parseAttribution :: [Token] -> Maybe(Stm, [Token])
 parseAttribution (VarTok var : AttrTok : restTokens) = case parseAExpr restTokens of
     Just (aexpr, restTokens) -> Just (IntAttribution var aexpr, restTokens)
@@ -216,3 +215,9 @@ parseStmGroup tokens = case parseStm tokens of
         Just (stms, restTokens) -> Just (stm : stms, restTokens)
         _ -> Just ([stm], restTokens)
     _ -> Nothing
+
+parseProgram :: [Token] -> [Stm]
+parseProgram tokens = case parseStm tokens of
+    Just (stm, []) -> [stm]
+    Just (stm, restTokens) -> stm : parseProgram restTokens
+    Nothing -> error "Parsing Error"

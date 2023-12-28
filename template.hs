@@ -147,8 +147,8 @@ compile (x:xs) = case x of
   IfElse a b (Just c) -> (compB a) ++ [Branch (compile b) (compile c)] ++ (compile xs)
   IfElse a b Nothing -> (compB a) ++ [Branch (compile b) [Noop]] ++ (compile xs)
 
--- parse :: String -> Program
-parse = undefined -- TODO
+parse :: String -> [Stm]
+parse program = parseProgram (lexer program)
 
 -- To help you test your parser
 testParser :: String -> (String, String)

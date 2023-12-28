@@ -114,9 +114,9 @@ parseBExpr tokens = case parseBTerm tokens of
 -- <attribution> ::= <var> ":=" (<aexpr> | <bexpr>)
 parseAttribution :: [Token] -> Maybe(Stm, [Token])
 parseAttribution (VarTok var : AttrTok : restTokens) = case parseAExpr restTokens of
-    Just (aexpr, restTokens) -> Just (IntAttribution var aexpr, restTokens)
+    Just (aexpr, EndTok : restTokens) -> Just (IntAttribution var aexpr, restTokens)
     _ -> case parseBExpr restTokens of
-        Just (bexpr, restTokens) -> Just (BoolAttribution var bexpr, restTokens)
+        Just (bexpr, EndTok : restTokens) -> Just (BoolAttribution var bexpr, restTokens)
         _ -> Nothing
 
 parseAttribution _ = Nothing
@@ -189,8 +189,7 @@ parseDo restTokens bexpr = case parseStm restTokens of
 -- <stm> ::= (<attribution> ";") | <ifelse> | <while> | (<aexpr> ";") | (<bexpr> ";")
 parseStm :: [Token] -> Maybe(Stm, [Token])
 parseStm tokens = case parseAttribution tokens of
-    Just (attribution, EndTok : restTokens) -> Just (attribution, restTokens)
-    Just (_, _) -> Nothing
+    Just (attribution, restTokens) -> Just (attribution, restTokens)
     _ -> case parseIf tokens of
         Just (ifelse, restTokens) -> Just (ifelse, restTokens)
         _ -> case parseWhile tokens of

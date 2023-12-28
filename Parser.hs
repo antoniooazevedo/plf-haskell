@@ -12,6 +12,7 @@ data Aexp
 
 data Bexp
   = BoolLit Bool
+  | BoolVar String
   | IntEquals Aexp Aexp
   | BoolEquals Bexp Bexp
   | LessEquals Aexp Aexp
@@ -67,7 +68,7 @@ parseAExpr tokens = case parseATerm tokens of
     _ -> Nothing
 
 
--- <bfactor> ::= "(" <bexpr> ")" | <aexpr> "<=" <aexpr> | <aexpr> "==" <aexpr> | "not" <bfactor> | "True" | "False"
+-- <bfactor> ::= "(" <bexpr> ")" | <aexpr> "<=" <aexpr> | <aexpr> "==" <aexpr> | "not" <bfactor> | <bvar> | "True" | "False"
 parseBFactor :: [Token] -> Maybe(Bexp, [Token])
 parseBFactor (OpenTok : restTokens) = case parseBExpr restTokens of
     Just (bexpr, CloseTok : restTokens) -> Just (bexpr, restTokens)
@@ -75,7 +76,9 @@ parseBFactor (OpenTok : restTokens) = case parseBExpr restTokens of
 
 parseBFactor (NotTok : restTokens) = case parseBFactor restTokens of
     Just(bfactor, restTokens) -> Just(NotExp bfactor, restTokens)
-    _ -> Nothing    
+    _ -> Nothing
+
+parseBFactor (VarTok var : restTokens) = Just (BoolVar var, restTokens)
 
 parseBFactor (BoolTok bool : restTokens) = Just (BoolLit bool, restTokens)
 
@@ -109,7 +112,7 @@ parseBExpr tokens = case parseBTerm tokens of
     _ -> Nothing
 
 
--- <attribution> ::= <var> ":=" (<aexpr> | <bexpr>)
+-- <attribution> ::= <avar> ":=" (<aexpr> | <bexpr>)
 parseAttribution :: [Token] -> Maybe(Stm, [Token])
 parseAttribution (VarTok var : AttrTok : restTokens) = case parseAExpr restTokens of
     Just (aexpr, restTokens) -> Just (IntAttribution var aexpr, restTokens)
@@ -184,18 +187,21 @@ parseDo restTokens bexpr = case parseStm restTokens of
     _ -> Nothing
 
 
--- <stm> ::= <attribution> | <ifelse> | <while> | <aexpr> | <bexpr>
+-- <stm> ::= (<attribution> ";") | <ifelse> | <while> | (<aexpr> ";") | (<bexpr> ";")
 parseStm :: [Token] -> Maybe(Stm, [Token])
 parseStm tokens = case parseAttribution tokens of
-    Just (attribution, restTokens) -> Just (attribution, restTokens)
+    Just (attribution, EndTok : restTokens) -> Just (attribution, restTokens)
+    Just (_, _) -> Nothing
     _ -> case parseIf tokens of
         Just (ifelse, restTokens) -> Just (ifelse, restTokens)
         _ -> case parseWhile tokens of
             Just (while, restTokens) -> Just (while, restTokens)
             _ -> case parseAExpr tokens of
-                Just (aexpr, restTokens) -> Just (NoStm, restTokens)
+                Just (aexpr, EndTok : restTokens) -> Just (NoStm, restTokens)
+                Just (_, _) -> Nothing
                 _ -> case parseBExpr tokens of
-                    Just (bexpr, restTokens) -> Just (NoStm, restTokens)
+                    Just (bexpr, EndTok : restTokens) -> Just (NoStm, restTokens)
+                    Just (_, _) -> Nothing
                     _ -> Nothing
 
 

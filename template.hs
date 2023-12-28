@@ -130,6 +130,7 @@ compA expr = case expr of
 compB :: Bexp -> Code
 compB expr = case expr of
   BoolLit a -> if a == True then [Tru] else [Fals]
+  BoolVar a -> [Fetch a]
   IntEquals a b -> (compA a) ++ (compA b) ++ [Equ]
   BoolEquals a b -> (compB a) ++ (compB b) ++ [Equ]
   LessEquals a b -> (compA b) ++ (compA a) ++ [Le]

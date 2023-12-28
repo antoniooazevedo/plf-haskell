@@ -22,7 +22,7 @@ data Bexp
 data Stm
   = IntAttribution String Aexp
   | BoolAttribution String Bexp
-  | While Bexp Stm
+  | While Bexp [Stm]
   | IfElse Bexp [Stm] (Maybe [Stm])
   | NoStm
   deriving Show
@@ -162,12 +162,26 @@ parseElse restTokens bexpr stm1 = Just (IfElse bexpr stm1 Nothing, restTokens)
 
 -- <while> ::= "while" <bexpr> "do" <stm>
 parseWhile :: [Token] -> Maybe(Stm, [Token])
-parseWhile (WhileTok : restTokens) = case parseBExpr restTokens of
-    Just (bexpr, DoTok : restTokens) -> case parseStm restTokens of
-        Just (stm, restTokens) -> Just (While bexpr stm, restTokens)
-        _ -> Nothing
+parseWhile (WhileTok : OpenTok : restTokens) = case parseBExpr restTokens of
+    Just (bexpr, CloseTok : DoTok : restTokens) -> parseDo restTokens bexpr
     _ -> Nothing
+
+parseWhile (WhileTok : restTokens) = case parseBExpr restTokens of
+    Just (bexpr, DoTok : restTokens) -> parseDo restTokens bexpr
+    _ -> Nothing
+
 parseWhile _ = Nothing
+
+parseDo :: [Token] -> Bexp -> Maybe(Stm, [Token])
+-- Has parentheses -> multiple statements possible
+parseDo (OpenTok : restTokens) bexpr = case parseStmGroup restTokens of
+    Just (stm, CloseTok : restTokens) -> Just (While bexpr stm, restTokens)
+    _ -> Nothing
+
+-- No parentheses -> only one statement
+parseDo restTokens bexpr = case parseStm restTokens of
+    Just (stm, restTokens) -> Just (While bexpr [stm], restTokens)
+    _ -> Nothing
 
 
 -- <stm> ::= <attribution> | <ifelse> | <while> | <aexpr> | <bexpr>
@@ -187,7 +201,7 @@ parseStm tokens = case parseAttribution tokens of
 
 -- Parse multiple statements until failure
 ----------------------------------------------------------------------------
--- If used for parsing ifelse and while failure will usually be a closing parentheses. 
+-- If used for parsing ifelse and while, failure will usually be a closing parentheses. 
 -- In this case the program will continue, as it is the intended behaviour.
 -- If a closing parentheses is not found, the program will fail.
 parseStmGroup :: [Token] -> Maybe([Stm], [Token])

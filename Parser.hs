@@ -48,7 +48,7 @@ parseAFactor _ = Nothing
 --  <aterm> ::= <afactor> { "*" <afactor> }
 parseATerm :: [Token] -> Maybe(Aexp, [Token])
 parseATerm tokens = case parseAFactor tokens of
-    Just (afactor1, (TimesTok : restTokens)) -> case parseAFactor restTokens of
+    Just (afactor1, (TimesTok : restTokens)) -> case parseATerm restTokens of
         Just (afactor2, restTokens) -> Just (MultExp afactor1 afactor2, restTokens)
         _ -> Nothing
     Just (afactor, restTokens) -> Just(afactor, restTokens)
@@ -58,10 +58,10 @@ parseATerm tokens = case parseAFactor tokens of
 -- <aexpr> ::= <aterm> { ("+" | "-") <aterm>}
 parseAExpr :: [Token] -> Maybe(Aexp, [Token])
 parseAExpr tokens = case parseATerm tokens of
-    Just (aterm1, (PlusTok : restTokens)) -> case parseATerm restTokens of
+    Just (aterm1, (PlusTok : restTokens)) -> case parseAExpr restTokens of
         Just (aterm2, restTokens) -> Just (AddExp aterm1 aterm2, restTokens)
         _ -> Nothing
-    Just (aterm1, (MinusTok : restTokens)) -> case parseATerm restTokens of
+    Just (aterm1, (MinusTok : restTokens)) -> case parseAExpr restTokens of
         Just (aterm2, restTokens) -> Just (SubExp aterm1 aterm2, restTokens)
         _ -> Nothing
     Just (aterm, restTokens) -> Just(aterm, restTokens)
@@ -104,7 +104,7 @@ parseBTerm tokens = case parseBFactor tokens of
 -- <bexpr> ::= <bterm> { "and" <bterm> }
 parseBExpr :: [Token] -> Maybe(Bexp, [Token])
 parseBExpr tokens = case parseBTerm tokens of
-    Just (bterm1, AndTok : restTokens) -> case parseBTerm restTokens of
+    Just (bterm1, AndTok : restTokens) -> case parseBExpr restTokens of
         Just (bterm2, restTokens) -> Just (AndExp bterm1 bterm2, restTokens)
         _ -> Nothing
     Just (bterm, restTokens) -> Just(bterm, restTokens)

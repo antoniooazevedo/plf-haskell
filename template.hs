@@ -139,11 +139,12 @@ compB expr = case expr of
 compile :: [Stm] -> Code
 compile [] = []
 compile (x:xs) = case x of
+  NoStm -> compile xs
   IntAttribution a b -> (compA b) ++ [Store a] ++ (compile xs)
   BoolAttribution a b -> (compB b) ++ [Store a] ++ (compile xs)
   While a b -> [Loop (compB a) (compile [b])] ++ (compile xs)
-  IfElse a b (Just c) -> (compB a) ++ [Branch (compile [b]) (compile [c])] ++ (compile xs)
-  IfElse a b Nothing -> (compB a) ++ [Branch (compile [b]) [Noop]] ++ (compile xs)
+  IfElse a b (Just c) -> (compB a) ++ [Branch (compile b) (compile c)] ++ (compile xs)
+  IfElse a b Nothing -> (compB a) ++ [Branch (compile b) [Noop]] ++ (compile xs)
 
 -- parse :: String -> Program
 parse = undefined -- TODO

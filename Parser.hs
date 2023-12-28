@@ -23,7 +23,8 @@ data Stm
   = IntAttribution String Aexp
   | BoolAttribution String Bexp
   | While Bexp Stm
-  | IfElse Bexp Stm (Maybe Stm)
+  | IfElse Bexp [Stm] (Maybe [Stm])
+  | NoStm
   deriving Show
 
 -- <afactor> ::= <var> | <num> | "(" <aexpr> ")" | "-" <afactor>
@@ -108,7 +109,7 @@ parseBExpr tokens = case parseBTerm tokens of
     _ -> Nothing
 
 
--- <attribution> ::= <var> ":=" <aexpr>
+-- <attribution> ::= <var> ":=" (<aexpr> | <bexpr>)
 parseAttribution :: [Token] -> Maybe(Stm, [Token])
 parseAttribution (VarTok var : AttrTok : restTokens) = case parseAExpr restTokens of
     Just (aexpr, restTokens) -> Just (IntAttribution var aexpr, restTokens)
@@ -120,16 +121,44 @@ parseAttribution _ = Nothing
 
 
 -- <ifelse> ::= "if" <bexpr> "then" <stm> ["else" <stm>]
-parseIfElse :: [Token] -> Maybe(Stm, [Token])
-parseIfElse (IfTok : restTokens) = case parseBExpr restTokens of
-    Just (bexpr, ThenTok : restTokens) -> case parseStm restTokens of
-        Just (stm1, ElseTok : restTokens) -> case parseStm restTokens of
-            Just (stm2, restTokens) -> Just (IfElse bexpr stm1 (Just stm2), restTokens)
-            _ -> Nothing
-        Just (stm, restTokens) -> Just (IfElse bexpr stm Nothing, restTokens)
-        _ -> Nothing
+parseIf :: [Token] -> Maybe(Stm, [Token])
+parseIf (IfTok : OpenTok : restTokens) = case parseBExpr restTokens of
+    Just (bexpr, CloseTok : ThenTok : restTokens) -> parseThen restTokens bexpr
     _ -> Nothing
-parseIfElse _ = Nothing
+
+parseIf (IfTok : restTokens) = case parseBExpr restTokens of
+    Just (bexpr, ThenTok : restTokens) -> parseThen restTokens bexpr
+    _ -> Nothing
+
+parseIf _ = Nothing
+
+
+parseThen :: [Token] -> Bexp -> Maybe(Stm, [Token])
+-- Has parentheses -> multiple statements possible
+parseThen (OpenTok : restTokens) bexpr = case parseStmGroup restTokens of
+    Just (stm, CloseTok : restTokens) -> parseElse restTokens bexpr stm
+    _ -> Nothing
+
+-- No parentheses -> only one statement
+parseThen restTokens bexpr = case parseStm restTokens of
+    Just (stm, restTokens) -> parseElse restTokens bexpr [stm]
+    _ -> Nothing
+
+
+parseElse :: [Token] -> Bexp -> [Stm] -> Maybe(Stm, [Token])
+-- Has parentheses -> multiple statements possible
+parseElse (ElseTok : OpenTok : restTokens) bexpr stm1 = case parseStmGroup restTokens of
+    Just (stm2, CloseTok : restTokens) -> Just (IfElse bexpr stm1 (Just stm2), restTokens)
+    _ -> Nothing
+
+-- No parentheses -> only one statement
+parseElse (ElseTok : restTokens) bexpr stm1 = case parseStm restTokens of
+    Just (stm2, restTokens) -> Just (IfElse bexpr stm1 (Just [stm2]), restTokens)
+    _ -> Nothing
+
+-- No else statement
+parseElse restTokens bexpr stm1 = Just (IfElse bexpr stm1 Nothing, restTokens)
+
 
 -- <while> ::= "while" <bexpr> "do" <stm>
 parseWhile :: [Token] -> Maybe(Stm, [Token])
@@ -141,12 +170,29 @@ parseWhile (WhileTok : restTokens) = case parseBExpr restTokens of
 parseWhile _ = Nothing
 
 
--- <stm> ::= <attribution> | <ifelse> | <while>
+-- <stm> ::= <attribution> | <ifelse> | <while> | <aexpr> | <bexpr>
 parseStm :: [Token] -> Maybe(Stm, [Token])
 parseStm tokens = case parseAttribution tokens of
     Just (attribution, restTokens) -> Just (attribution, restTokens)
-    _ -> case parseIfElse tokens of
+    _ -> case parseIf tokens of
         Just (ifelse, restTokens) -> Just (ifelse, restTokens)
         _ -> case parseWhile tokens of
             Just (while, restTokens) -> Just (while, restTokens)
-            _ -> Nothing
+            _ -> case parseAExpr tokens of
+                Just (aexpr, restTokens) -> Just (NoStm, restTokens)
+                _ -> case parseBExpr tokens of
+                    Just (bexpr, restTokens) -> Just (NoStm, restTokens)
+                    _ -> Nothing
+
+
+-- Parse multiple statements until failure
+----------------------------------------------------------------------------
+-- If used for parsing ifelse and while failure will usually be a closing parentheses. 
+-- In this case the program will continue, as it is the intended behaviour.
+-- If a closing parentheses is not found, the program will fail.
+parseStmGroup :: [Token] -> Maybe([Stm], [Token])
+parseStmGroup tokens = case parseStm tokens of
+    Just (stm, restTokens) -> case parseStmGroup restTokens of
+        Just (stms, restTokens) -> Just (stm : stms, restTokens)
+        _ -> Just ([stm], restTokens)
+    _ -> Nothing

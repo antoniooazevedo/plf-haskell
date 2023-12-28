@@ -1,0 +1,16 @@
+x:=1;
+y:=10;
+z:=10;
+nSmallerOrEqual := 0;
+nBigger := 0;
+while (x <= z) do (
+    y:= y - 1;
+    x:= x + 1;
+
+    if (not y <= x) then (
+        nSmallerOrEqual :=  nSmallerOrEqual + 1;
+    )
+    else (
+        nBigger := nBigger + 1;
+    )
+)

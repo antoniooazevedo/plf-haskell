@@ -12,5 +12,5 @@ while (x <= z) do (
     )
     else (
         nBigger := nBigger + 1;
-    )
-)
+    );
+);

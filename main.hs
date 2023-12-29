@@ -126,8 +126,8 @@ run ((Fetch a:xs), stack, state) = run (xs, ((case (find (\(x,_) -> x == a) stat
 
 -- Store instruction
 -- pops a value from the stack and stores it in the state with the string given as argument
-run ((Store a: xs), (IntVal s:sR), state) = run (xs, sR, ((a, IntVal s):[(x,y) | (x,y) <- state, x /= a]))
-run ((Store a: xs), (BoolVal s:sR), state) = run (xs, sR, ((a, BoolVal s):[(x,y) | (x,y) <- state, x /= a]))
+run ((Store a: xs), (IntVal s:sR), state) = run (xs, sR, (sortOn fst ((a, IntVal s):[(x,y) | (x,y) <- state, x /= a])))
+run ((Store a: xs), (BoolVal s:sR), state) = run (xs, sR, (sortOn fst ((a, BoolVal s):[(x,y) | (x,y) <- state, x /= a])))
 
 
 -- Branch instruction

@@ -2,6 +2,7 @@ module Parser where
 
 import Lexer
 
+-- Data defining an arithmetic expression
 data Aexp
   = IntLit Integer
   | IntVar String
@@ -10,6 +11,8 @@ data Aexp
   | MultExp Aexp Aexp
   deriving Show
 
+
+-- Data defining a boolean expression
 data Bexp
   = BoolLit Bool
   | BoolVar String
@@ -20,6 +23,8 @@ data Bexp
   | NotExp Bexp
   deriving Show
 
+
+-- Data defining a statement
 data Stm
   = IntAttribution String Aexp
   | BoolAttribution String Bexp

@@ -2,6 +2,7 @@ module Lexer where
 
 import Data.Char
 
+-- Data defining a token
 data Token
     = PlusTok
     | MinusTok
@@ -25,6 +26,8 @@ data Token
     | VarTok String
     deriving (Show, Eq)
 
+
+-- Lexer function
 lexer :: String -> [Token]
 lexer [] = []
 lexer ('+' : restStr) = PlusTok : lexer restStr
@@ -46,7 +49,8 @@ lexer ('a':'n':'d': restStr) = AndTok : lexer restStr
 lexer ('n':'o':'t': restStr) = NotTok : lexer restStr
 lexer ('T':'r':'u':'e': restStr) = BoolTok True : lexer restStr
 lexer ('F':'a':'l':'s':'e': restStr) = BoolTok False : lexer restStr
-lexer (x : restStr)
+
+lexer (x : restStr) -- will get rid of all spaces
     | isDigit x = IntTok (read (x : takeWhile isDigit restStr)) : lexer (dropWhile isDigit restStr)
     | isAlpha x && isLower x = VarTok (x : takeWhile isAlphaNum restStr) : lexer (dropWhile isAlphaNum restStr)
     | isSpace x = lexer restStr

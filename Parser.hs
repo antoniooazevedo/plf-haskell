@@ -46,7 +46,7 @@ parseAFactor (MinusTok : restTokens) = case parseAFactor restTokens of
 parseAFactor _ = Nothing
 
 
---  <aterm> ::= <afactor> { "*" <afactor> }
+--  <aterm> ::= <afactor> { "*" <aterm> }
 parseATerm :: [Token] -> Maybe(Aexp, [Token])
 parseATerm tokens = case parseAFactor tokens of
     Just (afactor1, (TimesTok : restTokens)) -> case parseATerm restTokens of
@@ -56,7 +56,7 @@ parseATerm tokens = case parseAFactor tokens of
     _ -> Nothing
 
 
--- <aexpr> ::= <aterm> { ("+" | "-") <aterm>}
+-- <aexpr> ::= <aterm> { ("+" | "-") <aexpr>}
 parseAExpr :: [Token] -> Maybe(Aexp, [Token])
 parseAExpr tokens = case parseATerm tokens of
     Just (aterm1, (PlusTok : restTokens)) -> case parseAExpr restTokens of
@@ -92,7 +92,7 @@ parseBFactor tokens = case parseAExpr tokens of
         VarTok var : restTokens -> Just (BoolVar var, restTokens)
         _ -> Nothing
 
--- <bterm> ::= <bfactor> { "=" <bfactor> }
+-- <bterm> ::= <bfactor> { "=" <bterm> }
 parseBTerm :: [Token] -> Maybe(Bexp, [Token])
 parseBTerm tokens = case parseBFactor tokens of
     Just (bfactor1, BoolEqTok : restTokens) -> case parseBTerm restTokens of
@@ -102,7 +102,7 @@ parseBTerm tokens = case parseBFactor tokens of
     _ -> Nothing
 
 
--- <bexpr> ::= <bterm> { "and" <bterm> }
+-- <bexpr> ::= <bterm> { "and" <bexpr> }
 parseBExpr :: [Token] -> Maybe(Bexp, [Token])
 parseBExpr tokens = case parseBTerm tokens of
     Just (bterm1, AndTok : restTokens) -> case parseBExpr restTokens of
@@ -189,7 +189,7 @@ parseDo restTokens bexpr = case parseStm restTokens of
     _ -> Nothing
 
 
--- <stm> ::= (<attribution> ";") | <ifelse> | <while> | (<aexpr> ";") | (<bexpr> ";")
+-- <stm> ::= <attribution> | <ifelse> | <while> | <aexpr> | <bexpr>
 parseStm :: [Token] -> Maybe(Stm, [Token])
 parseStm tokens = case parseAttribution tokens of
     Just (attribution, restTokens) -> Just (attribution, restTokens)
@@ -199,10 +199,8 @@ parseStm tokens = case parseAttribution tokens of
             Just (while, restTokens) -> Just (while, restTokens)
             _ -> case parseAExpr tokens of
                 Just (aexpr, EndTok : restTokens) -> Just (Aexp aexpr, restTokens)
-                Just (_, _) -> Nothing
                 _ -> case parseBExpr tokens of
                     Just (bexpr, EndTok : restTokens) -> Just (Bexp bexpr, restTokens)
-                    Just (_, _) -> Nothing
                     _ -> Nothing
 
 

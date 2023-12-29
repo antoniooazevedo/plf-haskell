@@ -138,7 +138,9 @@ parseIf _ = Nothing
 parseThen :: [Token] -> Bexp -> Maybe(Stm, [Token])
 -- Has parentheses -> multiple statements possible
 parseThen (OpenTok : restTokens) bexpr = case parseStmGroup restTokens of
-    Just (stm, CloseTok : restTokens) -> parseElse restTokens bexpr stm
+    -- Semicolon after closing parentheses means no else statement
+    Just (stm, CloseTok : EndTok : restTokens) -> Just (IfElse bexpr stm Nothing, restTokens)
+    Just (stm, CloseTok : ElseTok : restTokens) -> parseElse (ElseTok:restTokens) bexpr stm
     _ -> Nothing
 
 -- No parentheses -> only one statement
@@ -150,7 +152,7 @@ parseThen restTokens bexpr = case parseStm restTokens of
 parseElse :: [Token] -> Bexp -> [Stm] -> Maybe(Stm, [Token])
 -- Has parentheses -> multiple statements possible
 parseElse (ElseTok : OpenTok : restTokens) bexpr stm1 = case parseStmGroup restTokens of
-    Just (stm2, CloseTok : restTokens) -> Just (IfElse bexpr stm1 (Just stm2), restTokens)
+    Just (stm2, CloseTok : EndTok : restTokens) -> Just (IfElse bexpr stm1 (Just stm2), restTokens)
     _ -> Nothing
 
 -- No parentheses -> only one statement
@@ -177,7 +179,7 @@ parseWhile _ = Nothing
 parseDo :: [Token] -> Bexp -> Maybe(Stm, [Token])
 -- Has parentheses -> multiple statements possible
 parseDo (OpenTok : restTokens) bexpr = case parseStmGroup restTokens of
-    Just (stm, CloseTok : restTokens) -> Just (While bexpr stm, restTokens)
+    Just (stm, CloseTok : EndTok : restTokens) -> Just (While bexpr stm, restTokens)
     _ -> Nothing
 
 -- No parentheses -> only one statement

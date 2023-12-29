@@ -141,7 +141,8 @@ compB expr = case expr of
 compile :: [Stm] -> Code
 compile [] = []
 compile (x:xs) = case x of
-  NoStm -> compile xs
+  Aexp a -> compA a ++ (compile xs)
+  Bexp a -> compB a ++ (compile xs)
   IntAttribution a b -> (compA b) ++ [Store a] ++ (compile xs)
   BoolAttribution a b -> (compB b) ++ [Store a] ++ (compile xs)
   While a b -> [Loop (compB a) (compile b)] ++ (compile xs)

@@ -25,7 +25,8 @@ data Stm
   | BoolAttribution String Bexp
   | While Bexp [Stm]
   | IfElse Bexp [Stm] (Maybe [Stm])
-  | NoStm
+  | Aexp Aexp
+  | Bexp Bexp
   deriving Show
 
 -- <afactor> ::= <var> | <num> | "(" <aexpr> ")" | "-" <afactor>
@@ -197,10 +198,10 @@ parseStm tokens = case parseAttribution tokens of
         _ -> case parseWhile tokens of
             Just (while, restTokens) -> Just (while, restTokens)
             _ -> case parseAExpr tokens of
-                Just (aexpr, EndTok : restTokens) -> Just (NoStm, restTokens)
+                Just (aexpr, EndTok : restTokens) -> Just (Aexp aexpr, restTokens)
                 Just (_, _) -> Nothing
                 _ -> case parseBExpr tokens of
-                    Just (bexpr, EndTok : restTokens) -> Just (NoStm, restTokens)
+                    Just (bexpr, EndTok : restTokens) -> Just (Bexp bexpr, restTokens)
                     Just (_, _) -> Nothing
                     _ -> Nothing
 

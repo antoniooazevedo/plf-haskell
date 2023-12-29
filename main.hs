@@ -161,7 +161,6 @@ compA expr = case expr of
 compB :: Bexp -> Code
 compB expr = case expr of
   BoolLit a -> if a == True then [Tru] else [Fals]
-  BoolVar a -> [Fetch a]
   IntEquals a b -> (compA a) ++ (compA b) ++ [Equ]
   BoolEquals a b -> (compB a) ++ (compB b) ++ [Equ]
   LessEquals a b -> (compA b) ++ (compA a) ++ [Le]
@@ -175,8 +174,7 @@ compile [] = []
 compile (x:xs) = case x of
   Aexp a -> compA a ++ (compile xs)
   Bexp a -> compB a ++ (compile xs)
-  IntAttribution a b -> (compA b) ++ [Store a] ++ (compile xs)
-  BoolAttribution a b -> (compB b) ++ [Store a] ++ (compile xs)
+  Attribution a b -> (compA b) ++ [Store a] ++ (compile xs)
   While a b -> [Loop (compB a) (compile b)] ++ (compile xs)
   IfElse a b (Just c) -> (compB a) ++ [Branch (compile b) (compile c)] ++ (compile xs)
   IfElse a b Nothing -> (compB a) ++ [Branch (compile b) [Noop]] ++ (compile xs)

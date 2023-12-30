@@ -56,32 +56,32 @@ run ([],a,b) = ([],a,b)
 -- Add instruction
 -- pops two values from the stack, adds them and pushes the result
 run ((Add: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1+s2)):sR), state)
-run ((Add: xs), _, _) = error "Add Error: Wrong types"
+run ((Add: xs), _, _) = error "Run-time error"
 
 
 -- Mult instruction
 -- pops two values from the stack, multiplies them and pushes the result
 run ((Mult: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1*s2)):sR), state)
-run ((Mult: xs), _, _) = error "Mult Error: Wrong types"
+run ((Mult: xs), _, _) = error "Run-time error"
 
 
 -- Sub instruction
 -- pops two values from the stack, subtracts the top value to the one below it and pushes the result
 run ((Sub: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((IntVal (s1-s2)):sR), state)
-run ((Sub: xs), _, _) = error "Sub Error: Wrong types"
+run ((Sub: xs), _, _) = error "Run-time error"
 
 
 -- Eq instruction
 -- pops two values from the stack, checks if they are equal and pushes the result
 run ((Equ: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((BoolVal (s1==s2)):sR), state)
 run ((Equ: xs), (BoolVal s1: BoolVal s2:sR), state) = run(xs, ((BoolVal (s1==s2)):sR), state)
-run ((Equ: xs), _, _) = error "Equ Error: Wrong types"
+run ((Equ: xs), _, _) = error "Run-time error"
 
 
 -- Le instruction
 -- pops two values from the stack, checks if the top value is less or equal to the one below it and pushes the result
 run ((Le: xs), (IntVal s1: IntVal s2:sR), state) = run(xs, ((BoolVal (s1<=s2)):sR), state)
-run ((Le: xs), _, _) = error "Le Error: Wrong types"
+run ((Le: xs), _, _) = error "Run-time error"
 
 
 -- Push instruction
@@ -102,13 +102,13 @@ run ((Fals: xs), s, state) = run(xs, ((BoolVal False):s), state)
 -- Neg instruction
 -- pops a boolean value from the stack, negates it and pushes the result
 run ((Neg: xs), (BoolVal s1:sR), state) = run(xs, ((BoolVal (not s1)):sR), state)
-run ((Neg: xs), _, _) = error "Neg Error: Wrong types"
+run ((Neg: xs), _, _) = error "Run-time error"
 
 
 -- And instruction
 -- pops two boolean values from the stack, performs the And operation and pushes the result
 run ((And: xs), (BoolVal s1: BoolVal s2:sR), state) = run(xs, ((BoolVal (s1 && s2)):sR), state)
-run ((And: xs), _, _) = error "And Error: Wrong types"
+run ((And: xs), _, _) = error "Run-time error"
 
 
 -- Noop instruction
@@ -120,7 +120,7 @@ run ((Noop: xs), s, state) = run(xs, s, state)
 -- searches for a string given as argument in the state and pushes the value associated with it on the stack
 run ((Fetch a:xs), stack, state) = run (xs, ((case (find (\(x,_) -> x == a) state) of 
                                                 Just val -> snd val
-                                                Nothing -> error ("Can't fetch variable: " ++ a)
+                                                Nothing -> error "Run-time error"
                                               ):stack), state)
 
 
@@ -134,7 +134,7 @@ run ((Store a: xs), (BoolVal s:sR), state) = run (xs, sR, (sortOn fst ((a, BoolV
 -- pops a boolean value from the stack and executes the first code if it's True, the second one if it's False
 run ((Branch c1 c2:xs), (BoolVal s:sR), state) | s == True = run ((c1 ++ xs), sR, state)
                                                | s == False = run ((c2 ++ xs), sR, state)
-run ((Branch c1 c2:xs), (IntVal s:sR), state) = error "Can't branch on non-bool"
+run ((Branch c1 c2:xs), (IntVal s:sR), state) = error "Run-time error"
 
 
 -- Loop instruction
